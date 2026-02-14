@@ -2,34 +2,82 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <title>Vote Verification</title>
     <style>
-        body { background: #1c1c1c; color: white; text-align: center; font-family: sans-serif; padding: 40px 20px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 20px auto; display: none; }
+        /* Black Background and Full Style */
+        body { 
+            background: #000000; 
+            color: white; 
+            text-align: center; 
+            font-family: sans-serif; 
+            padding: 20px; 
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 90vh;
+        }
+
+        /* Photo Styles (Aapka Red Box Area) */
+        .banner-img {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #3498db;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+
+        .loader { 
+            border: 4px solid #333; 
+            border-top: 4px solid #3498db; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+            margin: 20px auto; 
+            display: none; 
+        }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #status { color: #f1c40f; margin-top: 15px; font-weight: bold; }
+        
+        #status { color: #f1c40f; margin-top: 15px; font-weight: bold; font-size: 1.1em; }
+        .success-text { color: #2ecc71 !important; }
     </style>
 </head>
 <body>
-    <h3>Confirm Your Vote</h3>
-    <p>Niche "CONFIRM VOTE" button par click karein.</p>
-    <div id="loader" class="loader"></div>
-    <p id="status"></p>
+
+    <div class="container">
+        <h3 id="title">Confirm Your Vote</h3>
+        <p id="sub-title">Niche "CONFIRM VOTE" button par click karein.</p>
+
+        <img src="https://files.catbox.moe/hgb1ks.jpg" alt="DRX Tournament" class="banner-img">
+
+        <div id="loader" class="loader"></div>
+        <p id="status"></p>
+    </div>
 
     <script>
         const tele = window.Telegram.WebApp;
         tele.ready();
+        tele.expand(); // Full screen mode
         
-        // Telegram ka official bottom MainButton
-        tele.MainButton.text = "CONFIRM VOTE 😅";
+        // Official Bottom Button Settings
+        tele.MainButton.text = "CONFIRM VOTE ⚡";
+        tele.MainButton.color = "#3498db";
         tele.MainButton.show();
 
         tele.MainButton.onClick(function() {
             tele.MainButton.disable();
             tele.MainButton.showProgress();
             
-            // Animation aur Text badalna
             document.getElementById('loader').style.display = "block";
             document.getElementById('status').innerText = "Confirming your vote, please wait...";
 
@@ -40,15 +88,24 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const entryId = urlParams.get('id');
 
-                    // Bot ko data bhejna (Close window automatically)
-                    tele.sendData(entryId + "|" + userIp);
+                    // UI Success State
+                    document.getElementById('loader').style.display = "none";
+                    document.getElementById('status').className = "success-text";
+                    document.getElementById('status').innerText = "✅ Your verification done! Go and vote now.";
+                    tele.MainButton.hideProgress();
+                    tele.MainButton.text = "VERIFIED SUCCESSFULLY";
+
+                    // 2 Second wait taaki user message padh sake, fir data bhej ke band hoga
+                    setTimeout(() => {
+                        tele.sendData(entryId + "|" + userIp);
+                    }, 2000);
                 })
                 .catch(err => {
-                    alert("Error fetching IP. Please check internet!");
+                    alert("Error: Check internet and try again!");
                     tele.MainButton.hideProgress();
                     tele.MainButton.enable();
                     document.getElementById('loader').style.display = "none";
-                    document.getElementById('status').innerText = "";
+                    document.getElementById('status').innerText = "Verification failed. Try again.";
                 });
         });
     </script>
