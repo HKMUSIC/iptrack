@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Vote Confirmation</title>
+    <title>Vote Verification</title>
     <style>
-        body { background: #1c1c1c; color: white; text-align: center; font-family: sans-serif; padding: 20px; }
-        .btn { background: #3498db; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 18px; cursor: pointer; margin-top: 20px; }
-        #status { margin-top: 20px; color: #aaa; }
+        body { background: #1c1c1c; color: white; text-align: center; font-family: sans-serif; padding: 40px 20px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #status { color: #f1c40f; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h3>Device Verification</h3>
-    <p>Click below to securely record your vote. This prevents multiple ID abuse from the same device.</p>
-    
-    <button class="btn" id="voteBtn">Confirm My Vote ⚡</button>
-    <p id="status">Ready to verify...</p>
+    <h3>Confirm Your Vote</h3>
+    <p>Niche "CONFIRM VOTE" button par click karein.</p>
+    <div id="loader" class="loader"></div>
+    <p id="status"></p>
 
     <script>
         const tele = window.Telegram.WebApp;
         tele.ready();
-        tele.expand();
+        
+        // Telegram ka official bottom MainButton
+        tele.MainButton.text = "CONFIRM VOTE 😅";
+        tele.MainButton.show();
 
-        document.getElementById('voteBtn').onclick = function() {
-            document.getElementById('status').innerText = "Fetching IP...";
-            this.disabled = true;
+        tele.MainButton.onClick(function() {
+            tele.MainButton.disable();
+            tele.MainButton.showProgress();
+            
+            // Animation aur Text badalna
+            document.getElementById('loader').style.display = "block";
+            document.getElementById('status').innerText = "Confirming your vote, please wait...";
 
             fetch('https://api.ipify.org?format=json')
                 .then(response => response.json())
@@ -32,14 +40,17 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const entryId = urlParams.get('id');
 
-                    // Data bot ko bhej rahe hain
+                    // Bot ko data bhejna (Close window automatically)
                     tele.sendData(entryId + "|" + userIp);
                 })
                 .catch(err => {
-                    alert("Network Error! Try again.");
-                    this.disabled = false;
+                    alert("Error fetching IP. Please check internet!");
+                    tele.MainButton.hideProgress();
+                    tele.MainButton.enable();
+                    document.getElementById('loader').style.display = "none";
+                    document.getElementById('status').innerText = "";
                 });
-        };
+        });
     </script>
 </body>
 </html>
