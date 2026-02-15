@@ -5,16 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <title>Vote Verification</title>
+
     <style>
-        body { 
-            background: #000000; 
-            color: white; 
-            text-align: center; 
-            font-family: sans-serif; 
-            padding: 20px; 
+        body {
+            background: #000000;
+            color: white;
+            text-align: center;
+            font-family: sans-serif;
+            padding: 20px;
             margin: 0;
             overflow: hidden;
         }
+
         .container {
             display: flex;
             flex-direction: column;
@@ -22,6 +24,7 @@
             justify-content: center;
             height: 90vh;
         }
+
         .banner-img {
             width: 100%;
             max-width: 300px;
@@ -30,76 +33,118 @@
             border: 2px solid #3498db;
             box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
         }
-        .loader { 
-            border: 4px solid #333; 
-            border-top: 4px solid #3498db; 
-            border-radius: 50%; 
-            width: 40px; 
-            height: 40px; 
-            animation: spin 1s linear infinite; 
-            margin: 20px auto; 
-            display: none; 
+
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #status { color: #f1c40f; margin-top: 15px; font-weight: bold; font-size: 1.1em; }
-        .success-text { color: #2ecc71 !important; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #status {
+            color: #f1c40f;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .success-text {
+            color: #2ecc71 !important;
+        }
+
+        .error-text {
+            color: #e74c3c !important;
+        }
     </style>
 </head>
+
 <body>
 
-    <div class="container">
-        <h3>Confirm Your Vote</h3>
-        <p>Niche "CONFIRM VOTE" button par click karein.</p>
+<div class="container">
+    <h3>Confirm Your Vote</h3>
+    <p>Niche "CONFIRM VOTE" button par click karein.</p>
 
-        <img src="https://files.catbox.moe/hgb1ks.jpg" alt="DRX Tournament" class="banner-img">
+    <img src="https://files.catbox.moe/hgb1ks.jpg" 
+         alt="DRX Tournament" 
+         class="banner-img">
 
-        <div id="loader" class="loader"></div>
-        <p id="status"></p>
-    </div>
+    <div id="loader" class="loader"></div>
+    <p id="status"></p>
+</div>
 
-    <script>
-        const tele = window.Telegram.WebApp;
-        tele.ready();
-        tele.expand();
-        
+<script>
+    const tele = window.Telegram.WebApp;
+    tele.ready();
+    tele.expand();
+
+    const statusText = document.getElementById("status");
+    const loader = document.getElementById("loader");
+
+    // Get entry ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const entryId = urlParams.get("id");
+
+    // Safety check
+    if (!entryId) {
+        statusText.className = "error-text";
+        statusText.innerText = "❌ Invalid session. Please go back and click vote button again.";
+        tele.MainButton.hide();
+    } else {
+
         tele.MainButton.text = "CONFIRM VOTE ⚡";
         tele.MainButton.color = "#3498db";
         tele.MainButton.show();
 
-        tele.MainButton.onClick(function() {
+        tele.MainButton.onClick(function () {
+
             tele.MainButton.disable();
             tele.MainButton.showProgress();
-            
-            document.getElementById('loader').style.display = "block";
-            document.getElementById('status').innerText = "Confirming your vote, please wait...";
 
-            fetch('https://api.ipify.org?format=json')
+            loader.style.display = "block";
+            statusText.innerText = "Confirming your vote, please wait...";
+
+            // Get user IP
+            fetch("https://api.ipify.org?format=json")
                 .then(response => response.json())
                 .then(data => {
-                    const userIp = data.ip;
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const entryId = urlParams.get('id');
 
-                    // WebApp Success View
-                    document.getElementById('loader').style.display = "none";
-                    document.getElementById('status').className = "success-text";
-                    document.getElementById('status').innerText = "✅ Your verification done! Go and vote now.";
-                    
+                    const userIp = data.ip;
+
+                    loader.style.display = "none";
+                    statusText.className = "success-text";
+                    statusText.innerText = "✅ Verification successful! Vote registered.";
+
                     tele.MainButton.hideProgress();
                     tele.MainButton.text = "VERIFIED ✅";
 
-                    // Theek 1.5 second baad bot ko data bhej kar close hoga
+                    // Send data back to bot
                     setTimeout(() => {
                         tele.sendData(entryId + "|" + userIp);
+                        tele.close(); // Close web app automatically
                     }, 1500);
+
                 })
-                .catch(err => {
-                    alert("Error: Check internet and try again!");
+                .catch(error => {
+
+                    loader.style.display = "none";
+                    statusText.className = "error-text";
+                    statusText.innerText = "❌ Internet error. Please try again.";
+
                     tele.MainButton.hideProgress();
                     tele.MainButton.enable();
-                    document.getElementById('loader').style.display = "none";
                 });
         });
-    </script>
+    }
+</script>
+
 </body>
 </html>
